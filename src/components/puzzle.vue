@@ -14,7 +14,7 @@
                 </div>
 
                 <div>
-                    <label for="input">Answer</label>
+                    <label for="input">Movie Name</label>
                     <input ref="userInputField" type="text" name="input" id="input" v-model="userInput" />
                 </div>
 
@@ -77,6 +77,10 @@ const showHint = () => {
 }
 
 const checkAnswer = async () => {
+    if (userInput.value.trim().length === 0) {
+        return
+    }
+
     // disable submit button
     submitButton.value.disabled = true
 
@@ -88,7 +92,7 @@ const checkAnswer = async () => {
 
     runAssistant()
 
-    periodicCheck(() => {
+    checkMessages(() => {
         const json = messages.value.data[0].content[0].text.value
         // remove first and last line
         const jsonObject = JSON.parse(json.split('\n').slice(1, -1).join('\n'))
@@ -100,20 +104,21 @@ const checkAnswer = async () => {
             if (game.lives === 0) {
                 userInputField.value.disabled = true
                 game.score = 0
+                assistantResponse.value = jsonObject['1']
                 console.log('game over');
                 return
             }
-            console.log('wrong answer, lives -- ', game.lives);
             submitButton.value.disabled = false
             userInput.value = ''
             game.lives -= 1
             game.score -= 10
+            console.log('wrong answer, lives -- ', game.lives);
         }
         assistantResponse.value = jsonObject['1']
     })
 }
 
-const periodicCheck = (fn) => {
+const checkMessages = (fn) => {
     const interval = setInterval(async () => {
         const runRetrieve = await openai.beta.threads.runs.retrieve(
             thread.value.id,
@@ -150,7 +155,7 @@ const generatePuzzle = async (prompt) => {
 
     runAssistant()
 
-    periodicCheck(async () => {
+    checkMessages(async () => {
         // first message is the puzzle
         const json = messages.value.data[0].content[0].text.value
         // remove first and last line
@@ -180,7 +185,7 @@ const init = async () => {
     // prompt to create puzzle from movie title
     // const prompt = `Create a puzzle from the movie title ${movieTitle}. First give a general puzzle question in a modern poetic style but use simple words, then provide three clues to guess the movie title. 1 easy clue and 2 hard clues. Easy clue: Hard clue 1: Hard clue 2: make sure the response is json string exatly 4 lines. the key for general question and each clue should be 0 to 3. I will play the game in the following message prompts. If I answer the movie correctly or incorrectly, provide response in json format in 2 line key-value pair that starts from 0 - 1, first line should be Boolean value, and second line should be a funny response. If I don't answer about the game and talk about something else, again provide response in json format in 2 line key-value pair that starts from 0 - 1, first line should be Boolean value, and second line should be a funny response and add that they have lost one life.`
 
-    const prompt = `Create a puzzle from the movie title ${movieTitle}. First give a general puzzle question in a modern poetic style but use simple words, then provide three clues to guess the movie title. 1 easy clue and 2 hard clues. Easy clue: Hard clue 1: Hard clue 2: make sure the response is json string exatly 4 lines. the key for general question and each clue should be 0 to 3. I will play the game in the following message prompts.`
+    const prompt = `Create a puzzle from the movie title ${movieTitle}. First give a general puzzle question in a modern poetic style but use simple words, then provide three clues to guess the movie title. 1 easy clue, 1 lead actor clue and 1 hard clue. Make sure the response is json string exatly 4 lines. the key for general question and each clue should be 0 to 3. I will play the game in the following message prompts.`
 
     // spin OpenAI
     await generatePuzzle(prompt)
@@ -195,6 +200,7 @@ onMounted(() => {
 <style scoped>
 .puzzle-container {
     width: min(90vw, 500px);
+    margin-top: 80px;
 }
 
 form {
@@ -214,6 +220,7 @@ input {
     height: 40px;
     width: 100%;
     margin-bottom: 10px;
+    font-size: 18px;
 }
 
 .stats-container {
@@ -237,6 +244,7 @@ input {
 
 .hint-container ul {
     list-style: none;
+    padding: 0;
 }
 
 .hint-container li {
