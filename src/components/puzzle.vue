@@ -84,7 +84,7 @@ const checkAnswer = async () => {
     // disable submit button
     submitButton.value.disabled = true
 
-    const prompt = `The player's response is in triple asterisks here ***${userInput.value}***. If the player doesn't answer about the game and talk about something else, provide a funny response and add that they have lost one life. If they ask for clues or hints, direct the player to click the show hint button and add that their lack of knowledge has cost them points. Provide the response in json format in 2 line key-value pair that starts from 0 - 1, first line should be Boolean value, true for correct answer, and second line should be a funny response. `
+    const prompt = `The player's response is in triple asterisks here ***${userInput.value}***. If the player doesn't answer about the game and talk about something else, provide a funny response and add that they have lost one life. If they ask for clues or hints, direct the player to click the show hint button and add that their lack of knowledge has cost them points. Provide the response in json format in 2 line key-value pair that starts from 0 - 1, first line should be Boolean value, true for correct answer, and second line should be a funny response (don't use exact movie title in response). `
     await openai.beta.threads.messages.create(
         thread.value.id,
         { role: "user", content: prompt },
